@@ -2,23 +2,15 @@ var mysql = require("mysql2");
 var util = require("util");
 require("dotenv").config();
 
-var conn = mysql.createPool({
+var pool = mysql.createPool({
     host: process.env.HOST,
     user: process.env.USER,
     password: process.env.PASSWORD,
-    database: process.env.DATABASE
+    database: process.env.DATABASE,
+    connectionLimit: 10
 });
 
-conn.connect((err) => {
-    if (err) {
-        console.log("❌ Database Connection Failed");
-        console.log(err);
-    } else {
-        console.log("✅ Database Connected");
-    }
-});
-
-// Promisify after conn is created
-var exe = util.promisify(conn.query).bind(conn);
+// Promisify pool query
+var exe = util.promisify(pool.query).bind(pool);
 
 module.exports = exe;
