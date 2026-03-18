@@ -86,25 +86,15 @@ router.use(veryfyLogin);
 
 router.get("/dashboard", async (req, res) => {
   try {
-    const results = await Promise.all([
-      exe("SELECT COUNT(*) AS total FROM admissions"),
-      exe("SELECT COUNT(*) AS total FROM upcoming_batches WHERE is_active=1"),
-      exe("SELECT COUNT(*) AS total FROM courses_list"),
-      exe("SELECT COUNT(*) AS total FROM faculty"),
-      exe("SELECT COUNT(*) AS total FROM admissions WHERE status='Approved'"),
-      exe("SELECT COUNT(*) AS total FROM contact_enquiries WHERE status='1'"),
-      exe("SELECT COUNT(*) AS total FROM contact_enquiries WHERE status='0'")
-    ]);
+    const students = await exe("SELECT COUNT(*) AS total FROM admissions");
+    const batches = await exe("SELECT COUNT(*) AS total FROM upcoming_batches WHERE is_active=1");
+    const courses = await exe("SELECT COUNT(*) AS total FROM courses_list");
+    const faculty = await exe("SELECT COUNT(*) AS total FROM faculty");
+    const admissions = await exe("SELECT COUNT(*) AS total FROM admissions WHERE status='Approved'");
+    const enquiryActive = await exe("SELECT COUNT(*) AS total FROM contact_enquiries WHERE status=1");
+    const enquiryClosed = await exe("SELECT COUNT(*) AS total FROM contact_enquiries WHERE status=0");
 
-    const [
-      students,
-      batches,
-      courses,
-      faculty,
-      admissions,
-      enquiryActive,
-      enquiryClosed
-    ] = results;
+    console.log(students); // DEBUG
 
     res.render("admin/dashboard", {
       counts: {
@@ -117,27 +107,16 @@ router.get("/dashboard", async (req, res) => {
         contact_closed: enquiryClosed[0]?.total || 0,
         contact_enquiries:
           (enquiryActive[0]?.total || 0) +
-          (enquiryClosed[0]?.total || 0)
+          (enquiryClosed[0]?.total || 0) 
       }
     });
 
   } catch (err) {
     console.error("Dashboard Error:", err);
-
-    res.render("admin/dashboard", {
-      counts: {
-        students: 0,
-        batches: 0,
-        courses: 0,
-        faculty: 0,
-        admissions: 0,
-        contact_active: 0,
-        contact_closed: 0,
-        contact_enquiries: 0
-      }
-    });
+    res.send(err); // TEMPORARY DEBUG
   }
 });
+
 
 // Home Banner Code start...................................................
 router.get("/home_banner", async (req, res) => {
