@@ -86,15 +86,7 @@ router.use(veryfyLogin);
 
 router.get("/dashboard", async (req, res) => {
   try {
-    const [
-      students,
-      batches,
-      courses,
-      faculty,
-      admissions,
-      enquiryActive,
-      enquiryClosed
-    ] = await Promise.all([
+    const results = await Promise.all([
       exe("SELECT COUNT(*) AS total FROM admissions"),
       exe("SELECT COUNT(*) AS total FROM upcoming_batches WHERE is_active=1"),
       exe("SELECT COUNT(*) AS total FROM courses_list"),
@@ -104,22 +96,34 @@ router.get("/dashboard", async (req, res) => {
       exe("SELECT COUNT(*) AS total FROM contact_enquiries WHERE status='0'")
     ]);
 
+    const [
+      students,
+      batches,
+      courses,
+      faculty,
+      admissions,
+      enquiryActive,
+      enquiryClosed
+    ] = results;
+
     res.render("admin/dashboard", {
       counts: {
-        students: students[0].total,
-        batches: batches[0].total,
-        courses: courses[0].total,
-        faculty: faculty[0].total,
-        admissions: admissions[0].total,
-        contact_active: enquiryActive[0].total,
-        contact_closed: enquiryClosed[0].total,
+        students: students[0]?.total || 0,
+        batches: batches[0]?.total || 0,
+        courses: courses[0]?.total || 0,
+        faculty: faculty[0]?.total || 0,
+        admissions: admissions[0]?.total || 0,
+        contact_active: enquiryActive[0]?.total || 0,
+        contact_closed: enquiryClosed[0]?.total || 0,
         contact_enquiries:
-          enquiryActive[0].total + enquiryClosed[0].total
+          (enquiryActive[0]?.total || 0) +
+          (enquiryClosed[0]?.total || 0)
       }
     });
 
   } catch (err) {
     console.error("Dashboard Error:", err);
+
     res.render("admin/dashboard", {
       counts: {
         students: 0,
